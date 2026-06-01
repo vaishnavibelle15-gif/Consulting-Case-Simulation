@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zomato · Profitability Strategy</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red:#E53935; --red-dark:#B71C1C; --red-light:#FFEBEE;
+  --amber:#F59E0B; --amber-light:#FFFBEB;
+  --green:#16A34A; --green-light:#F0FDF4;
+  --blue:#2563EB; --blue-light:#EFF6FF;
+  --purple:#7C3AED;
+  --ink:#0F172A; --ink-mid:#334155; --ink-light:#64748B; --ink-muted:#94A3B8;
+  --bg:#F8FAFC; --white:#FFFFFF; --border:#E2E8F0; --border-light:#F1F5F9;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.08);
+  --shadow:0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg:0 12px 40px rgba(0,0,0,0.12);
+  --radius:12px; --radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;}
+
+/* ── SIDEBAR ── */
+.layout{display:flex;min-height:100vh;}
+.sidebar{
+  width:240px;min-width:240px;background:var(--ink);
+  display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;
+}
+.sidebar-logo{padding:28px 24px 20px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.logo-badge{
+  background:var(--red);color:#fff;font-family:'Syne',sans-serif;
+  font-weight:800;font-size:20px;letter-spacing:-0.5px;
+  padding:8px 14px;border-radius:8px;display:inline-block;margin-bottom:10px;
+}
+.sidebar-logo p{color:rgba(255,255,255,0.45);font-size:11px;font-weight:500;letter-spacing:0.5px;text-transform:uppercase;}
+.sidebar-logo h2{color:#fff;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-top:2px;line-height:1.4;}
+
+.sidebar-nav{padding:20px 12px;flex:1;}
+.nav-section-label{
+  color:rgba(255,255,255,0.3);font-size:10px;font-weight:600;
+  letter-spacing:1px;text-transform:uppercase;padding:0 12px;margin-bottom:8px;margin-top:16px;
+}
+.nav-section-label:first-child{margin-top:0;}
+.nav-btn{
+  display:flex;align-items:center;gap:10px;width:100%;
+  padding:10px 12px;border:none;background:transparent;
+  color:rgba(255,255,255,0.55);font-size:13px;font-weight:500;font-family:'Inter',sans-serif;
+  border-radius:8px;cursor:pointer;text-align:left;transition:all 0.15s;margin-bottom:2px;
+}
+.nav-btn:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.9);}
+.nav-btn.active{background:rgba(229,57,53,0.2);color:#fff;font-weight:600;}
+.nav-btn .icon{font-size:16px;width:20px;text-align:center;flex-shrink:0;}
+.nav-btn .badge-dot{
+  margin-left:auto;width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0;
+}
+
+.sidebar-footer{
+  padding:16px 24px;border-top:1px solid rgba(255,255,255,0.08);
+  color:rgba(255,255,255,0.25);font-size:11px;line-height:1.6;
+}
+
+/* ── MAIN ── */
+.main{margin-left:240px;flex:1;display:flex;flex-direction:column;}
+.topbar{
+  background:var(--white);border-bottom:1px solid var(--border);
+  padding:0 36px;height:60px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+}
+.topbar-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--ink);}
+.topbar-meta{display:flex;align-items:center;gap:16px;}
+.topbar-chip{
+  background:var(--border-light);color:var(--ink-light);
+  font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;letter-spacing:0.3px;
+}
+.topbar-chip.live{background:#DCFCE7;color:#15803D;}
+
+.content{padding:32px 36px 60px;}
+.page{display:none;}
+.page.active{display:block;animation:fadeIn 0.2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── PAGE HEADER ── */
+.page-hd{margin-bottom:28px;}
+.page-hd h1{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;letter-spacing:-0.8px;margin-bottom:4px;}
+.page-hd p{color:var(--ink-light);font-size:13px;font-weight:400;}
+
+/* ── ALERT ── */
+.alert{
+  display:flex;align-items:flex-start;gap:14px;
+  padding:16px 20px;border-radius:var(--radius-sm);margin-bottom:28px;border:1px solid;
+}
+.alert.warn{background:#FFFBEB;border-color:#FDE68A;color:#92400E;}
+.alert.danger{background:#FEF2F2;border-color:#FECACA;color:#991B1B;}
+.alert.info{background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF;}
+.alert-icon{font-size:18px;flex-shrink:0;margin-top:1px;}
+.alert-body{font-size:13px;line-height:1.6;}
+.alert-body strong{font-weight:600;}
+
+/* ── KPI GRID ── */
+.kpi-row{display:grid;gap:16px;margin-bottom:24px;}
+.kpi-row.cols4{grid-template-columns:repeat(4,1fr);}
+.kpi-row.cols3{grid-template-columns:repeat(3,1fr);}
+.kpi-row.cols2{grid-template-columns:repeat(2,1fr);}
+
+.kpi{
+  background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px 22px;position:relative;overflow:hidden;transition:box-shadow 0.2s;
+}
+.kpi:hover{box-shadow:var(--shadow);}
+.kpi-accent{position:absolute;top:0;left:0;right:0;height:3px;}
+.kpi-accent.red{background:var(--red);}
+.kpi-accent.amber{background:var(--amber);}
+.kpi-accent.green{background:var(--green);}
+.kpi-accent.blue{background:var(--blue);}
+.kpi-accent.purple{background:var(--purple);}
+.kpi-label{font-size:11px;font-weight:600;letter-spacing:0.6px;text-transform:uppercase;color:var(--ink-muted);margin-bottom:10px;}
+.kpi-val{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--ink);letter-spacing:-1px;line-height:1;margin-bottom:6px;}
+.kpi-delta{font-size:12px;font-weight:500;display:flex;align-items:center;gap:4px;}
+.kpi-delta.up{color:var(--green);}
+.kpi-delta.dn{color:var(--red);}
+.kpi-delta.flat{color:var(--ink-muted);}
+
+/* ── CHART CARDS ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:20px;}
+.span-full{grid-column:1/-1;}
+
+.card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px;
+}
+.card-hd{margin-bottom:16px;}
+.card-hd h3{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--ink);margin-bottom:3px;}
+.card-hd p{font-size:12px;color:var(--ink-muted);font-weight:400;}
+.chart-box{position:relative;}
+.h200{height:200px;}
+.h260{height:260px;}
+.h300{height:300px;}
+.h340{height:340px;}
+
+/* ── TABLES ── */
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl th{
+  text-align:left;padding:10px 14px;
+  font-size:10px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;
+  color:var(--ink-muted);border-bottom:1px solid var(--border);background:var(--border-light);
+}
+.tbl th:first-child{border-radius:6px 0 0 0;}
+.tbl th:last-child{border-radius:0 6px 0 0;}
+.tbl td{padding:11px 14px;border-bottom:1px solid var(--border-light);color:var(--ink-mid);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:#FAFBFC;}
+.tbl td strong{color:var(--ink);font-weight:600;}
+
+.pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.pill-green{background:var(--green-light);color:#15803D;}
+.pill-red{background:var(--red-light);color:var(--red-dark);}
+.pill-amber{background:var(--amber-light);color:#B45309;}
+.pill-blue{background:var(--blue-light);color:#1D4ED8;}
+
+/* ── RECOMMENDATION CARDS ── */
+.rec-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:32px;}
+.rec{
+  background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+  padding:28px;position:relative;overflow:hidden;transition:box-shadow 0.2s;
+}
+.rec:hover{box-shadow:var(--shadow-lg);}
+.rec-stripe{position:absolute;top:0;left:0;right:0;height:4px;}
+.rec-num{
+  position:absolute;top:16px;right:20px;
+  font-family:'Syne',sans-serif;font-size:52px;font-weight:800;
+  color:var(--border-light);line-height:1;user-select:none;
+}
+.rec-tag{font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:10px;}
+.rec h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--ink);margin-bottom:10px;line-height:1.3;}
+.rec p{font-size:13px;color:var(--ink-light);line-height:1.65;margin-bottom:18px;}
+.impact-row{display:flex;gap:10px;}
+.impact-pill{
+  flex:1;background:var(--bg);border:1px solid var(--border);
+  border-radius:8px;padding:10px 12px;text-align:center;
+}
+.impact-pill .ilabel{font-size:10px;color:var(--ink-muted);font-weight:600;letter-spacing:0.3px;margin-bottom:3px;}
+.impact-pill .ival{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--green);}
+
+/* ── SWOT ── */
+.swot{display:grid;grid-template-columns:1fr 1fr;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);margin-bottom:28px;}
+.swot-q{padding:26px 30px;}
+.swot-q h4{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.swot-q.s{background:#F0FDF4;} .swot-q.s h4{color:#15803D;}
+.swot-q.w{background:#FFFBEB;} .swot-q.w h4{color:#B45309;}
+.swot-q.o{background:#EFF6FF;} .swot-q.o h4{color:#1D4ED8;}
+.swot-q.t{background:#FFF1F2;} .swot-q.t h4{color:#BE123C;}
+.swot-item{font-size:13px;color:var(--ink-mid);padding:5px 0 5px 14px;position:relative;line-height:1.5;}
+.swot-item::before{content:'→';position:absolute;left:0;color:var(--ink-muted);font-size:11px;}
+
+/* ── PRIORITY MATRIX ── */
+.matrix-row{display:grid;grid-template-columns:auto 1fr auto auto auto;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid var(--border-light);}
+.matrix-row:last-child{border-bottom:none;}
+.priority-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.matrix-title{font-size:13px;font-weight:600;color:var(--ink);}
+.matrix-sub{font-size:12px;color:var(--ink-muted);}
+
+@media(max-width:1000px){
+  .sidebar{width:200px;min-width:200px;}
+  .main{margin-left:200px;}
+  .content{padding:24px 20px 60px;}
+  .kpi-row.cols4{grid-template-columns:repeat(2,1fr);}
+  .grid2,.grid3,.rec-grid{grid-template-columns:1fr;}
+  .swot{grid-template-columns:1fr;}
+}
+@media(max-width:700px){
+  .sidebar{display:none;}
+  .main{margin-left:0;}
+  .kpi-row.cols4,.kpi-row.cols3{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ── SIDEBAR ─────────────────────────────────────────────── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-badge">Z</div>
+    <p>Consulting Case · FY 2023</p>
+    <h2>Profitability Improvement Strategy</h2>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <button class="nav-btn active" onclick="showPage('executive',this)">
+      <span class="icon">📊</span> Executive Summary
+      <span class="badge-dot"></span>
+    </button>
+    <div class="nav-section-label">Deep Dive</div>
+    <button class="nav-btn" onclick="showPage('profitability',this)">
+      <span class="icon">💰</span> Profitability
+    </button>
+    <button class="nav-btn" onclick="showPage('operations',this)">
+      <span class="icon">🚚</span> Operations
+    </button>
+    <button class="nav-btn" onclick="showPage('customers',this)">
+      <span class="icon">👥</span> Customer Segments
+    </button>
+    <div class="nav-section-label">Consulting Output</div>
+    <button class="nav-btn" onclick="showPage('strategy',this)">
+      <span class="icon">🎯</span> Strategy & Recs
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    Data: 5,000 orders<br>
+    10 cities · 3 segments<br>
+    Jan – Dec 2023
+  </div>
+</aside>
+
+<!-- ── MAIN ─────────────────────────────────────────────────── -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Executive Summary</div>
+    <div class="topbar-meta">
+      <span class="topbar-chip live">● FY 2023</span>
+      <span class="topbar-chip">Zomato India</span>
+      <span class="topbar-chip">Consulting Simulation</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ════════════════════════════════════════════════
+         PAGE 1 · EXECUTIVE SUMMARY
+    ════════════════════════════════════════════════ -->
+    <div class="page active" id="page-executive">
+      <div class="page-hd">
+        <h1>Executive Summary</h1>
+        <p>High-level KPIs and the core profitability narrative · FY 2023</p>
+      </div>
+
+      <div class="alert warn">
+        <span class="alert-icon">⚠️</span>
+        <div class="alert-body">
+          <strong>Critical finding:</strong> Orders grew +25% YoY and revenue +18%, yet profit declined 12% vs target.
+          Root cause: discount rates escalated from 15% (Jan) → 36% (Dec), eroding margins quarter by quarter.
+        </div>
+      </div>
+
+      <div class="kpi-row cols4">
+        <div class="kpi"><div class="kpi-accent blue"></div><div class="kpi-label">Total Revenue</div><div class="kpi-val">₹16.6L</div><div class="kpi-delta up">↑ +18% YoY</div></div>
+        <div class="kpi"><div class="kpi-accent red"></div><div class="kpi-label">Net Profit</div><div class="kpi-val">₹9.3L</div><div class="kpi-delta dn">↓ −12% vs target</div></div>
+        <div class="kpi"><div class="kpi-accent amber"></div><div class="kpi-label">Avg Profit Margin</div><div class="kpi-val">50.2%</div><div class="kpi-delta dn">↓ was 58% in Jan</div></div>
+        <div class="kpi"><div class="kpi-accent green"></div><div class="kpi-label">Total Orders</div><div class="kpi-val">5,000</div><div class="kpi-delta up">↑ +25% YoY</div></div>
+        <div class="kpi"><div class="kpi-accent red"></div><div class="kpi-label">Avg Discount Rate</div><div class="kpi-val">25.6%</div><div class="kpi-delta dn">↑ from 15% in Jan</div></div>
+        <div class="kpi"><div class="kpi-accent blue"></div><div class="kpi-label">Avg Order Value</div><div class="kpi-val">₹446</div><div class="kpi-delta flat">→ Stable</div></div>
+        <div class="kpi"><div class="kpi-accent amber"></div><div class="kpi-label">Avg Delivery Time</div><div class="kpi-val">43 min</div><div class="kpi-delta dn">↑ Target is 38 min</div></div>
+        <div class="kpi"><div class="kpi-accent purple"></div><div class="kpi-label">Avg Customer Rating</div><div class="kpi-val">3.68</div><div class="kpi-delta flat">→ Average band</div></div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-hd"><h3>Revenue vs Profit — Monthly</h3><p>Widening gap signals rising cost pressure through the year</p></div>
+          <div class="chart-box h260"><canvas id="c_trend"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h3>Discount Rate Growth</h3><p>Discount spiral — the primary profitability killer</p></div>
+          <div class="chart-box h260"><canvas id="c_disc_trend"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><h3>City-wise Revenue vs Profit</h3><p>Mumbai leads volume; Tier-2 cities show stronger unit economics</p></div>
+        <div class="chart-box h300"><canvas id="c_city_overview"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+         PAGE 2 · PROFITABILITY
+    ════════════════════════════════════════════════ -->
+    <div class="page" id="page-profitability">
+      <div class="page-hd">
+        <h1>Profitability Analysis</h1>
+        <p>City margins, discount impact, and cuisine-level breakdown</p>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-hd"><h3>Profit Margin % by City</h3><p>Tier-1 cities are margin-compressed; Tier-2 outperform</p></div>
+          <div class="chart-box h260"><canvas id="c_city_margin"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h3>Discount Band → Profit Margin</h3><p>Orders above 35% discount enter danger zone (28.7% margin)</p></div>
+          <div class="chart-box h260"><canvas id="c_disc_impact"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-hd"><h3>City Profitability Matrix</h3><p>Full breakdown — Revenue, Profit, Margin, Status</p></div>
+        <table class="tbl" id="cityTable"></table>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><h3>Profit by Cuisine Type</h3><p>North Indian and Biryani lead profitability</p></div>
+        <div class="chart-box h260"><canvas id="c_cuisine"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+         PAGE 3 · OPERATIONS
+    ════════════════════════════════════════════════ -->
+    <div class="page" id="page-operations">
+      <div class="page-hd">
+        <h1>Operations Dashboard</h1>
+        <p>Delivery efficiency, SLA performance, and cost drivers by city</p>
+      </div>
+
+      <div class="kpi-row cols3">
+        <div class="kpi"><div class="kpi-accent red"></div><div class="kpi-label">Avg Delivery Time</div><div class="kpi-val">43.2<span style="font-size:16px;font-weight:400"> min</span></div><div class="kpi-delta dn">↑ 14% above 38-min SLA</div></div>
+        <div class="kpi"><div class="kpi-accent amber"></div><div class="kpi-label">Avg Delivery Cost</div><div class="kpi-val">₹68</div><div class="kpi-delta dn">Mumbai avg ₹79/order</div></div>
+        <div class="kpi"><div class="kpi-accent green"></div><div class="kpi-label">Repeat Customer Rate</div><div class="kpi-val">41.7%</div><div class="kpi-delta flat">Industry avg ~45%</div></div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-hd"><h3>Avg Delivery Time by City</h3><p>Red = exceeds 38-min SLA · Green = within target</p></div>
+          <div class="chart-box h280"><canvas id="c_del_time"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h3>Delivery Time vs Customer Rating</h3><p>Strong negative correlation — faster delivery, higher rating</p></div>
+          <div class="chart-box h280"><canvas id="c_time_rating"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><h3>Monthly Orders vs Avg Delivery Time</h3><p>Order surge in Q4 directly caused delivery SLA breaches</p></div>
+        <div class="chart-box h300"><canvas id="c_ops_monthly"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+         PAGE 4 · CUSTOMER SEGMENTS
+    ════════════════════════════════════════════════ -->
+    <div class="page" id="page-customers">
+      <div class="page-hd">
+        <h1>Customer Segments</h1>
+        <p>Budget vs Regular vs Premium — who really drives profitability?</p>
+      </div>
+
+      <div class="alert info">
+        <span class="alert-icon">💡</span>
+        <div class="alert-body">
+          <strong>Key Insight:</strong> Premium customers represent only 20% of orders but generate <strong>35% of total profit</strong> with a 65% repeat rate.
+          Acquiring 1 Premium customer is worth acquiring 4 Budget customers.
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-hd"><h3>Profit Share by Segment</h3><p>Premium punches far above its weight</p></div>
+          <div class="chart-box h260"><canvas id="c_seg_pie"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h3>Avg Order Value & Repeat Rate</h3><p>Premium loyalty creates compounding profitability</p></div>
+          <div class="chart-box h260"><canvas id="c_seg_bar"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><h3>Segment Profitability Table</h3><p>Full breakdown with strategic priority rating</p></div>
+        <table class="tbl" id="segTable"></table>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+         PAGE 5 · STRATEGY
+    ════════════════════════════════════════════════ -->
+    <div class="page" id="page-strategy">
+      <div class="page-hd">
+        <h1>Strategy & Recommendations</h1>
+        <p>Consulting-grade action plan to restore and improve profitability</p>
+      </div>
+
+      <div class="rec-grid">
+        <div class="rec">
+          <div class="rec-stripe" style="background:var(--red)"></div>
+          <div class="rec-num">01</div>
+          <div class="rec-tag" style="color:var(--red)">🔴 URGENT · Pricing Reform</div>
+          <h3>Cap Discounts at 25% Maximum</h3>
+          <p>Discount rates grew 15% → 36% over FY 2023, the single largest profit drain. Orders above 35% discount earn just 28.7% margin vs 61.2% at low discounts. Introduce segment-based caps: Budget ≤ 20%, Regular ≤ 25%, Premium → shift to loyalty rewards instead.</p>
+          <div class="impact-row">
+            <div class="impact-pill"><div class="ilabel">Margin Uplift</div><div class="ival">+8–12%</div></div>
+            <div class="impact-pill"><div class="ilabel">Annual Gain</div><div class="ival">₹1.8L+</div></div>
+            <div class="impact-pill"><div class="ilabel">Timeline</div><div class="ival">30 days</div></div>
+          </div>
+        </div>
+
+        <div class="rec">
+          <div class="rec-stripe" style="background:var(--amber)"></div>
+          <div class="rec-num">02</div>
+          <div class="rec-tag" style="color:#B45309">🟡 HIGH · Operations</div>
+          <h3>Optimize Tier-1 Delivery Zones</h3>
+          <p>Mumbai delivery costs ₹79/order vs ₹51 in Jaipur — a 55% gap. 75% of Mumbai/Delhi orders exceed the 38-minute SLA, directly lowering ratings. Introduce micro-zone clustering and dark store expansion in high-cost corridors to cut Tier-1 delivery cost 18% in 90 days.</p>
+          <div class="impact-row">
+            <div class="impact-pill"><div class="ilabel">Cost Reduction</div><div class="ival">−18%</div></div>
+            <div class="impact-pill"><div class="ilabel">SLA Target</div><div class="ival">38 min</div></div>
+            <div class="impact-pill"><div class="ilabel">Timeline</div><div class="ival">90 days</div></div>
+          </div>
+        </div>
+
+        <div class="rec">
+          <div class="rec-stripe" style="background:var(--green)"></div>
+          <div class="rec-num">03</div>
+          <div class="rec-tag" style="color:#15803D">🟢 GROWTH · Retention</div>
+          <h3>Invest in Premium Customer Retention</h3>
+          <p>Premium customers generate 2.3× higher profit/order (₹222 vs ₹55 for Budget) and repeat 65% of the time. Launch Zomato Gold 2.0: priority delivery SLA, loyalty cashback (replacing discounts), and chef's table partnerships — targeting conversion of 15% of Regular users to Premium.</p>
+          <div class="impact-row">
+            <div class="impact-pill"><div class="ilabel">Profit Multiplier</div><div class="ival">2.3×</div></div>
+            <div class="impact-pill"><div class="ilabel">Repeat Rate</div><div class="ival">65%</div></div>
+            <div class="impact-pill"><div class="ilabel">Timeline</div><div class="ival">60 days</div></div>
+          </div>
+        </div>
+
+        <div class="rec">
+          <div class="rec-stripe" style="background:var(--blue)"></div>
+          <div class="rec-num">04</div>
+          <div class="rec-tag" style="color:#1D4ED8">🔵 STRATEGIC · Expansion</div>
+          <h3>Double Down on Tier-2 Cities</h3>
+          <p>Jaipur (60%), Surat (60.9%), and Ahmedabad (57.6%) have 10–14 pp higher profit margins than Mumbai/Delhi due to lower delivery costs and less aggressive discount competition. Redirect 30% of marketing spend to accelerate these markets, targeting +40% order volume in 12 months.</p>
+          <div class="impact-row">
+            <div class="impact-pill"><div class="ilabel">Margin Advantage</div><div class="ival">+14pp</div></div>
+            <div class="impact-pill"><div class="ilabel">Volume Target</div><div class="ival">+40%</div></div>
+            <div class="impact-pill"><div class="ilabel">Timeline</div><div class="ival">12 months</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SWOT -->
+      <div class="page-hd" style="margin-top:12px">
+        <h1>SWOT Analysis</h1>
+        <p>Strategic situation assessment for Zomato Food Delivery</p>
+      </div>
+      <div class="swot">
+        <div class="swot-q s">
+          <h4>💪 Strengths</h4>
+          <div class="swot-item">Dominant brand with 15M+ app downloads in India</div>
+          <div class="swot-item">Technology-led matching engine (restaurant ↔ rider ↔ customer)</div>
+          <div class="swot-item">Only platform with online delivery in India + UAE</div>
+          <div class="swot-item">Hyperpure B2B procurement — diversified revenue stream</div>
+        </div>
+        <div class="swot-q w">
+          <h4>⚠️ Weaknesses</h4>
+          <div class="swot-item">Unsustainable discount dependency — grew 15% → 36% in one year</div>
+          <div class="swot-item">High delivery cost in Tier-1 cities (Mumbai ₹79/order)</div>
+          <div class="swot-item">Low Budget segment retention (25% repeat rate)</div>
+          <div class="swot-item">Delivery SLA breached on 75% of Mumbai/Delhi orders</div>
+        </div>
+        <div class="swot-q o">
+          <h4>🚀 Opportunities</h4>
+          <div class="swot-item">Tier-2/3 city expansion with 14pp+ higher margins</div>
+          <div class="swot-item">Premium subscription model to reduce discount reliance</div>
+          <div class="swot-item">Cloud kitchen partnerships to lower restaurant cost</div>
+          <div class="swot-item">Corporate meal delivery — stable B2B revenue vertical</div>
+        </div>
+        <div class="swot-q t">
+          <h4>⚡ Threats</h4>
+          <div class="swot-item">Swiggy + ONDC aggressive discount wars in Tier-1 cities</div>
+          <div class="swot-item">Gig worker reclassification regulatory risk</div>
+          <div class="swot-item">Rising fuel costs increasing per-order delivery spend</div>
+          <div class="swot-item">Restaurant chains building direct D2C ordering apps</div>
+        </div>
+      </div>
+
+      <!-- Porter's 5 Forces -->
+      <div class="card">
+        <div class="card-hd"><h3>Porter's Five Forces — Competitive Intensity</h3><p>Food delivery industry landscape assessment</p></div>
+        <div class="chart-box h260"><canvas id="c_porter"></canvas></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+// ── DATA ─────────────────────────────────────────────────────────────────
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const mRevenue = [110000,112000,120000,125000,130000,138000,145000,148000,152000,160000,165000,155000];
+const mProfit  = [63800,62720,64800,62500,60000,56580,53650,51800,52320,51200,52800,51000];
+const mDiscount= [15.2,16.8,18.1,19.5,21.2,23.5,25.8,27.9,29.1,31.5,33.8,35.9];
+const mOrders  = [320,310,380,400,420,450,480,510,530,560,580,460];
+const mDelTime = [38.5,38.2,39.1,39.8,40.5,41.2,42.5,44.1,45.5,46.8,47.2,46.0];
+
+const cities    = ['Mumbai','Delhi','Bangalore','Pune','Hyderabad','Chennai','Kolkata','Ahmedabad','Jaipur','Surat'];
+const cRevenue  = [376000,342000,257000,165000,133000,133000,116000,66000,50000,46000];
+const cProfit   = [186000,164000,128000,85000,70000,72000,64000,38000,30000,28000];
+const cMargin   = [49.5,47.9,49.8,51.5,52.6,54.1,55.2,57.6,60.0,60.9];
+const cDelivery = [48.1,47.3,44.5,42.0,41.1,40.5,39.8,38.5,37.9,37.2];
+const cRating   = [3.45,3.48,3.55,3.65,3.68,3.72,3.78,3.85,3.88,3.91];
+
+const discBands  = ['Low\n5–15%','Medium\n15–25%','High\n25–35%','Very High\n35%+'];
+const discMargins= [61.2,54.8,43.1,28.7];
+
+const cuisines      = ['North Indian','Biryani','Pizza','Chinese','South Indian','Fast Food','Continental','Desserts'];
+const cuisineProfit = [148000,131000,110000,115000,122000,98000,88000,54000];
+
+const segments  = ['Budget','Regular','Premium'];
+const segRev    = [562000,798000,300000];
+const segPro    = [218000,380000,334583];
+const segAOV    = [246,452,798];
+const segRepeat = [25,45,65];
+const segPPO    = [54.5,95.0,222.0];
+const segOrders = [2000,2000,1000];
+
+// ── CHART DEFAULTS ───────────────────────────────────────────────────────
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.color = '#64748B';
+const C = {red:'#E53935',amber:'#F59E0B',green:'#16A34A',blue:'#2563EB',purple:'#7C3AED'};
+
+// ── CHART REGISTRY (lazy init) ───────────────────────────────────────────
+const chartDefs = {};
+const chartInstances = {};
+
+function registerChart(id, defFn) { chartDefs[id] = defFn; }
+
+function initChartsForPage(pageId) {
+  const page = document.getElementById('page-' + pageId);
+  if (!page) return;
+  page.querySelectorAll('canvas').forEach(canvas => {
+    const id = canvas.id;
+    if (id && chartDefs[id] && !chartInstances[id]) {
+      chartInstances[id] = chartDefs[id](id);
+    }
+  });
+}
+
+// ── PAGE SWITCHING ───────────────────────────────────────────────────────
+const pageTitles = {
+  executive:'Executive Summary',
+  profitability:'Profitability Analysis',
+  operations:'Operations Dashboard',
+  customers:'Customer Segments',
+  strategy:'Strategy & Recommendations'
+};
+
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('topbar-title').textContent = pageTitles[name] || name;
+  // Lazy-init charts on first visit
+  setTimeout(() => initChartsForPage(name), 30);
+}
+
+// ── HELPER ───────────────────────────────────────────────────────────────
+function fmt(n) { return '₹' + (n/1000).toFixed(0) + 'K'; }
+
+// ══════════════════════════════════════════════════════════════════════════
+// CHART DEFINITIONS
+// ══════════════════════════════════════════════════════════════════════════
+
+// ── PAGE 1 ───────────────────────────────────────────────────────────────
+registerChart('c_trend', id => new Chart(id, {
+  type:'line',
+  data:{labels:months,datasets:[
+    {label:'Revenue',data:mRevenue,borderColor:C.blue,backgroundColor:'rgba(37,99,235,0.07)',fill:true,tension:0.4,pointRadius:3,borderWidth:2.5},
+    {label:'Profit', data:mProfit, borderColor:C.green,backgroundColor:'rgba(22,163,74,0.07)',fill:true,tension:0.4,pointRadius:3,borderWidth:2.5}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top'}},
+    scales:{y:{grid:{color:'#F1F5F9'},ticks:{callback:v=>'₹'+Math.round(v/1000)+'K'}}}}
+}));
+
+registerChart('c_disc_trend', id => new Chart(id, {
+  type:'bar',
+  data:{labels:months,datasets:[{
+    label:'Avg Discount %',data:mDiscount,
+    backgroundColor:mDiscount.map(v=>v>30?'rgba(229,57,53,0.85)':v>22?'rgba(245,158,11,0.85)':'rgba(22,163,74,0.8)'),
+    borderRadius:5,borderSkipped:false
+  }]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},annotation:{annotations:{line:{type:'line',yMin:25,yMax:25,borderColor:'#DC2626',borderWidth:1.5,borderDash:[4,3]}}}},
+    scales:{y:{min:10,grid:{color:'#F1F5F9'},ticks:{callback:v=>v+'%'}}}}
+}));
+
+registerChart('c_city_overview', id => new Chart(id, {
+  type:'bar',
+  data:{labels:cities,datasets:[
+    {label:'Revenue',data:cRevenue,backgroundColor:'rgba(37,99,235,0.75)',borderRadius:5},
+    {label:'Profit', data:cProfit, backgroundColor:'rgba(22,163,74,0.75)',borderRadius:5}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top'}},
+    scales:{y:{grid:{color:'#F1F5F9'},ticks:{callback:v=>'₹'+Math.round(v/1000)+'K'}}}}
+}));
+
+// ── PAGE 2 ───────────────────────────────────────────────────────────────
+registerChart('c_city_margin', id => new Chart(id, {
+  type:'bar',
+  data:{labels:cities,datasets:[{
+    label:'Profit Margin %',data:cMargin,
+    backgroundColor:cMargin.map(v=>v>57?'rgba(22,163,74,0.8)':v>52?'rgba(245,158,11,0.8)':'rgba(229,57,53,0.8)'),
+    borderRadius:5,borderSkipped:false
+  }]},
+  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+    plugins:{legend:{display:false}},
+    scales:{x:{grid:{color:'#F1F5F9'},ticks:{callback:v=>v+'%'}}}}
+}));
+
+registerChart('c_disc_impact', id => new Chart(id, {
+  type:'bar',
+  data:{labels:['5–15%','15–25%','25–35%','35–55%'],datasets:[{
+    label:'Avg Profit Margin %',data:discMargins,
+    backgroundColor:['rgba(22,163,74,0.8)','rgba(245,158,11,0.8)','rgba(239,68,68,0.75)','rgba(153,27,27,0.85)'],
+    borderRadius:5
+  }]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{y:{grid:{color:'#F1F5F9'},ticks:{callback:v=>v+'%'}}}}
+}));
+
+registerChart('c_cuisine', id => new Chart(id, {
+  type:'bar',
+  data:{labels:cuisines,datasets:[{
+    label:'Profit (₹)',data:cuisineProfit,
+    backgroundColor:'rgba(124,58,237,0.75)',borderRadius:5
+  }]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{y:{grid:{color:'#F1F5F9'},ticks:{callback:v=>'₹'+Math.round(v/1000)+'K'}}}}
+}));
+
+// ── PAGE 3 ───────────────────────────────────────────────────────────────
+registerChart('c_del_time', id => new Chart(id, {
+  type:'bar',
+  data:{labels:cities,datasets:[{
+    label:'Avg Delivery Time (min)',data:cDelivery,
+    backgroundColor:cDelivery.map(v=>v>44?'rgba(229,57,53,0.82)':v>40?'rgba(245,158,11,0.82)':'rgba(22,163,74,0.8)'),
+    borderRadius:5,borderSkipped:false
+  }]},
+  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+    plugins:{legend:{display:false}},
+    scales:{x:{min:30,grid:{color:'#F1F5F9'},ticks:{callback:v=>v+'m'}}}}
+}));
+
+registerChart('c_time_rating', id => new Chart(id, {
+  type:'scatter',
+  data:{datasets:[{
+    label:'City',
+    data:cities.map((c,i)=>({x:cDelivery[i],y:cRating[i],label:c})),
+    backgroundColor:C.blue,pointRadius:9,pointHoverRadius:11
+  }]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw.label}: ${ctx.raw.x}min → ⭐ ${ctx.raw.y}`}}},
+    scales:{
+      x:{title:{display:true,text:'Delivery Time (min)'},grid:{color:'#F1F5F9'},min:36,max:50},
+      y:{title:{display:true,text:'Avg Rating'},min:3.3,max:4.0,grid:{color:'#F1F5F9'}}
+    }}
+}));
+
+registerChart('c_ops_monthly', id => new Chart(id, {
+  type:'line',
+  data:{labels:months,datasets:[
+    {label:'Orders',data:mOrders,borderColor:C.blue,backgroundColor:'rgba(37,99,235,0.07)',fill:true,tension:0.4,pointRadius:3,borderWidth:2,yAxisID:'y'},
+    {label:'Delivery Time (min)',data:mDelTime,borderColor:C.red,borderDash:[5,3],tension:0.4,pointRadius:3,borderWidth:2,yAxisID:'y1'}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top'}},
+    scales:{
+      y:{type:'linear',position:'left',grid:{color:'#F1F5F9'},title:{display:true,text:'Orders'}},
+      y1:{type:'linear',position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'Delivery Time (min)'},min:36,max:50}
+    }}
+}));
+
+// ── PAGE 4 ───────────────────────────────────────────────────────────────
+registerChart('c_seg_pie', id => new Chart(id, {
+  type:'doughnut',
+  data:{
+    labels:['Budget (40%)','Regular (40%)','Premium (20%)'],
+    datasets:[{data:segPro,backgroundColor:['rgba(229,57,53,0.85)','rgba(245,158,11,0.85)','rgba(22,163,74,0.85)'],borderWidth:2,borderColor:'#fff',hoverOffset:6}]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'right'},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ₹${(ctx.raw/1000).toFixed(0)}K profit`}}}}
+}));
+
+registerChart('c_seg_bar', id => new Chart(id, {
+  type:'bar',
+  data:{labels:segments,datasets:[
+    {label:'Avg Order Value (₹)',data:segAOV,backgroundColor:'rgba(37,99,235,0.8)',borderRadius:5,yAxisID:'y'},
+    {label:'Repeat Rate %',data:segRepeat,backgroundColor:'rgba(22,163,74,0.8)',borderRadius:5,yAxisID:'y1'}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top'}},
+    scales:{
+      y:{type:'linear',position:'left',grid:{color:'#F1F5F9'},title:{display:true,text:'Avg Order Value (₹)'}},
+      y1:{type:'linear',position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'Repeat Rate %'},min:0,max:100}
+    }}
+}));
+
+// ── PAGE 5 ───────────────────────────────────────────────────────────────
+registerChart('c_porter', id => new Chart(id, {
+  type:'radar',
+  data:{
+    labels:['Competitive Rivalry','Threat of New Entrants','Buyer Bargaining Power','Supplier Power','Threat of Substitutes'],
+    datasets:[{
+      label:'Intensity (0–100)',
+      data:[90,55,75,60,65],
+      backgroundColor:'rgba(229,57,53,0.12)',
+      borderColor:C.red,
+      pointBackgroundColor:C.red,
+      pointRadius:5,
+      borderWidth:2
+    }]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{r:{min:0,max:100,ticks:{stepSize:25,backdropColor:'transparent'},grid:{color:'#E2E8F0'},pointLabels:{font:{size:12,weight:'500'}}}}}
+}));
+
+// ── BUILD TABLES ─────────────────────────────────────────────────────────
+function buildCityTable() {
+  const t = document.getElementById('cityTable');
+  const rows = cities.map((c,i) => {
+    const status = cMargin[i] > 57 ? ['Healthy','pill-green'] : cMargin[i] > 52 ? ['Watch','pill-amber'] : ['At Risk','pill-red'];
+    return `<tr>
+      <td><strong>${c}</strong></td>
+      <td>${fmt(cRevenue[i])}</td>
+      <td>${fmt(cProfit[i])}</td>
+      <td>${cMargin[i].toFixed(1)}%</td>
+      <td>₹${(cDelivery[i]*1.5+8).toFixed(0)}</td>
+      <td>${cDelivery[i]} min</td>
+      <td><span class="pill ${status[1]}">${status[0]}</span></td>
+    </tr>`;
+  });
+  t.innerHTML = `<thead><tr>
+    <th>City</th><th>Revenue</th><th>Profit</th><th>Margin %</th>
+    <th>Del. Cost</th><th>Del. Time</th><th>Status</th>
+  </tr></thead><tbody>${rows.join('')}</tbody>`;
+}
+
+function buildSegTable() {
+  const t = document.getElementById('segTable');
+  const priorities = [['Manage Cost','pill-red'],['Grow Volume','pill-amber'],['Invest & Retain','pill-green']];
+  const rows = segments.map((s,i) => `<tr>
+    <td><strong>${s}</strong></td>
+    <td>${fmt(segRev[i])}</td>
+    <td>${fmt(segPro[i])}</td>
+    <td>${segOrders[i].toLocaleString()}</td>
+    <td>₹${segPPO[i]}</td>
+    <td>₹${segAOV[i]}</td>
+    <td>${segRepeat[i]}%</td>
+    <td><span class="pill ${priorities[i][1]}">${priorities[i][0]}</span></td>
+  </tr>`);
+  t.innerHTML = `<thead><tr>
+    <th>Segment</th><th>Revenue</th><th>Profit</th><th>Orders</th>
+    <th>Profit/Order</th><th>Avg AOV</th><th>Repeat Rate</th><th>Priority</th>
+  </tr></thead><tbody>${rows.join('')}</tbody>`;
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  buildCityTable();
+  buildSegTable();
+  // Init charts for the default page (executive)
+  setTimeout(() => initChartsForPage('executive'), 60);
+});
+</script>
+</body>
+</html>
