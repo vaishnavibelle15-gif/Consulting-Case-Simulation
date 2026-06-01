@@ -1,4 +1,4 @@
-# 🍽️ Profitability Improvement Strategy — Zomato Food Delivery
+# Profitability Improvement Strategy — Zomato Food Delivery
 
 > **Consulting Case Simulation** | Data Analytics & Business Strategy Portfolio Project
 
@@ -8,7 +8,7 @@
 
 ---
 
-## 📌 Business Problem
+##  Business Problem
 
 **"Orders grew +25% YoY, but profits declined by 12%."**
 
@@ -20,7 +20,7 @@ As a consultant hired by a food delivery startup (modeled on Zomato), I was task
 
 ---
 
-## 🎯 Project Objectives
+##  Project Objectives
 
 | # | Objective |
 |---|-----------|
@@ -32,7 +32,7 @@ As a consultant hired by a food delivery startup (modeled on Zomato), I was task
 
 ---
 
-## 📂 Project Structure
+# Project Structure
 
 ```
 Consulting-Case-Simulation/
@@ -55,31 +55,31 @@ Consulting-Case-Simulation/
 
 ---
 
-## 🔑 Key Findings
+ Key Findings
 
-### 1. Discount Spiral — Root Cause of Profit Decline
+1. Discount Spiral — Root Cause of Profit Decline
 - Avg discount grew from **15% (Jan)** → **35.9% (Dec)**
 - Orders with **>35% discount** have only **28.7% profit margin** vs 61.2% at low discounts
 - Discount cost now represents **~35% of total revenue** — unsustainable
 
-### 2. Tier-1 City Delivery Cost Inefficiency
+2. Tier-1 City Delivery Cost Inefficiency
 - Mumbai avg delivery cost: **₹79/order** vs ₹51 in Jaipur (55% higher)
 - 75% of Mumbai & Delhi orders **exceed the 38-minute SLA**
 - Higher delivery time directly correlates with lower ratings (r = −0.82)
 
-### 3. Premium Customers Are Underserved
+3. Premium Customers Are Underserved
 - Premium segment: **2.3× higher profit/order** than Budget
 - Premium repeat rate: **65%** vs Budget's 25%
 - Only **20% of order volume** comes from this highly profitable segment
 
-### 4. Tier-2 Cities Show Better Unit Economics
+4. Tier-2 Cities Show Better Unit Economics
 - Jaipur, Surat, Ahmedabad: **57–61% profit margins**
 - Mumbai, Delhi: **47–50% margins** due to cost pressure
 - Strategic opportunity: Tier-2 city expansion
 
 ---
 
-## 📊 Dashboard
+# Dashboard
 
 Open `dashboard/index.html` in any browser for the interactive 5-page dashboard:
 
@@ -93,7 +93,7 @@ Open `dashboard/index.html` in any browser for the interactive 5-page dashboard:
 
 ---
 
-## 📋 Strategic Recommendations
+# Strategic Recommendations
 
 | Priority | Action | Expected Impact |
 |----------|--------|----------------|
@@ -104,7 +104,7 @@ Open `dashboard/index.html` in any browser for the interactive 5-page dashboard:
 
 ---
 
-## 🛠️ How to Run
+##  How to Run
 
 ```bash
 # 1. Clone the repo
@@ -125,7 +125,7 @@ open dashboard/index.html   # macOS
 
 ---
 
-## 🧰 Tech Stack
+ Tech Stack
 
 | Tool | Purpose |
 |------|---------|
@@ -136,7 +136,7 @@ open dashboard/index.html   # macOS
 
 ---
 
-## 🏗️ Consulting Frameworks Applied
+ Consulting Frameworks Applied
 
 - **SWOT Analysis** — Strategic situation mapping
 - **Porter's Five Forces** — Competitive intensity assessment
@@ -146,7 +146,7 @@ open dashboard/index.html   # macOS
 
 ---
 
-## 👤 About This Project
+ About This Project
 
 This is a **consulting case simulation** built as part of a data analytics portfolio.  
 It demonstrates business problem-solving, end-to-end analysis, and data storytelling skills — modeled after real consulting engagements.
@@ -155,4 +155,4 @@ It demonstrates business problem-solving, end-to-end analysis, and data storytel
 
 ---
 
-*Built with ❤️ | Open to feedback and collaboration*
+
